@@ -10,11 +10,17 @@ GO_VERSION ?= 1.11.5
 K8S_VERSION ?= 1.13
 REPO_URL := https://github.com/kubernetes/kubernetes
 PROXY_EXE := $(KUBERNETES_DIR)/_output/local/go/bin/kube-proxy
+CONTAINER_DIR=$(BUILD_DIR)/container
+IMAGE_MARKER=$(CONTAINER_DIR)/image-built
+IMAGE_TAG ?= platform9/kube-proxy:$(K8S_VERSION)
 
 $(BUILD_DIR):
 	mkdir -p $@
 	 
 $(GOPATH_DIR):
+	mkdir -p $@
+
+$(CONTAINER_DIR):
 	mkdir -p $@
 
 $(GO_DIR): | $(BUILD_DIR)
@@ -42,3 +48,15 @@ exe: $(PROXY_EXE)
 clean:
 	rm -rf $(BUILD_DIR)
 
+
+$(IMAGE_MARKER): $(PROXY_EXE) | $(CONTAINER_DIR)
+	cp Dockerfile $(CONTAINER_DIR)
+	cp $(PROXY_EXE) $(CONTAINER_DIR)
+	docker build --tag $(IMAGE_TAG) $(CONTAINER_DIR)
+	touch $@
+
+image: $(IMAGE_MARKER)
+
+image-clean:
+	docker images|tail -n +2|grep platform9/kube-proxy|awk '{print $3}' | xargs docker rmi -f || true
+	rm -f $(IMAGE_MARKER)
