@@ -14,6 +14,9 @@ PROXY_EXE := $(KUBERNETES_DIR)/_output/local/go/bin/kube-proxy
 $(BUILD_DIR):
 	mkdir -p $@
 	 
+$(GOPATH_DIR):
+	mkdir -p $@
+
 $(GO_DIR): | $(BUILD_DIR)
 	cd $(BUILD_DIR) && \
 	wget -q https://dl.google.com/go/go$(GO_VERSION).linux-amd64.tar.gz && \
