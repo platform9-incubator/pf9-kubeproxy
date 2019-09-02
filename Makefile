@@ -58,5 +58,14 @@ $(IMAGE_MARKER): $(PROXY_EXE) | $(CONTAINER_DIR)
 image: $(IMAGE_MARKER)
 
 image-clean:
-	docker images|tail -n +2|grep platform9/kube-proxy|awk '{print $3}' | xargs docker rmi -f || true
+	docker images|tail -n +2|grep platform9/kube-proxy|awk '{print $$3}' | xargs docker rmi -f || true
 	rm -f $(IMAGE_MARKER)
+
+push: $(IMAGE_MARKER)
+	docker push $(IMAGE_TAG)
+
+push-then-clean: $(IMAGE_MARKER)
+	docker push $(IMAGE_TAG) && \
+	docker images|tail -n +2|grep platform9/kube-proxy|awk '{print $$3}' | xargs docker rmi -f || true && \
+	rm -f $(IMAGE_MARKER)
+
