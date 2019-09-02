@@ -16,7 +16,7 @@ $(BUILD_DIR):
 	 
 $(GO_DIR): | $(BUILD_DIR)
 	cd $(BUILD_DIR) && \
-	wget https://dl.google.com/go/go$(GO_VERSION).linux-amd64.tar.gz && \
+	wget -q https://dl.google.com/go/go$(GO_VERSION).linux-amd64.tar.gz && \
 	tar xf go$(GO_VERSION).linux-amd64.tar.gz
 
 $(K8SIO_DIR):
@@ -29,8 +29,10 @@ k8s: | $(KUBERNETES_DIR)
 
 go: | $(GO_DIR)
 
-$(PROXY_EXE): | $(KUBERNETES_DIR) $(GOPATH_DIR) $(GO_DIR)
-	cd $(KUBERNETES_DIR) && GOPATH=$(GOPATH_DIR) PATH=$(GO_DIR)/bin:$(PATH) make WHAT=cmd/kube-proxy
+$(PROXY_EXE): | $(GOPATH_DIR) $(GO_DIR) $(KUBERNETES_DIR)
+	cd $(KUBERNETES_DIR) && \
+	find pkg/proxy -name *.go|xargs sed -i s/KUBE-/P9K8-/g && \
+	GOPATH=$(GOPATH_DIR) PATH=$(GO_DIR)/bin:$(PATH) make WHAT=cmd/kube-proxy
 
 exe: $(PROXY_EXE)
 
