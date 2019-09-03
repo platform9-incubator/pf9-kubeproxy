@@ -10,6 +10,7 @@ GO_VERSION ?= 1.11.5
 K8S_VERSION ?= 1.13
 REPO_URL := https://github.com/kubernetes/kubernetes
 PROXY_EXE := $(KUBERNETES_DIR)/_output/local/go/bin/kube-proxy
+APISERVER_EXE := $(KUBERNETES_DIR)/_output/local/go/bin/kube-apiserver
 CONTAINER_DIR=$(BUILD_DIR)/container
 IMAGE_MARKER=$(CONTAINER_DIR)/image-built
 IMAGE_TAG ?= platform9/kube-proxy:$(K8S_VERSION)
@@ -68,4 +69,11 @@ push-then-clean: $(IMAGE_MARKER)
 	docker push $(IMAGE_TAG) && \
 	docker images|tail -n +2|grep platform9/kube-proxy|awk '{print $$3}' | xargs docker rmi -f || true && \
 	rm -f $(IMAGE_MARKER)
+
+$(APISERVER_EXE): | $(GOPATH_DIR) $(GO_DIR) $(KUBERNETES_DIR)
+	cd $(KUBERNETES_DIR) && \
+	GOPATH=$(GOPATH_DIR) PATH=$(GO_DIR)/bin:$(PATH) make WHAT=cmd/kube-apiserver
+
+apiserver: $(APISERVER_EXE)
+
 
